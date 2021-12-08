@@ -3,6 +3,8 @@ import time
 import os
 import inquirer
 
+# TODO: build whole thing into object like an adult.
+
 token = os.environ.get('TOKEN')
 username = os.environ.get('USERNAME')
 endpoint = "https://pixe.la/v1/users/"
@@ -21,15 +23,16 @@ pixel_graphs_endpoint = ""
 graph_id = ""
 
 
-def get_graph_names():
+def get_graph_names(graph=None):
     global graph_list
-    reset_graph_list()
+    global graph_list_names
     pixel_graphs_list = f"{endpoint}{username}/graphs/"
     try:
         req = requests.get(url=pixel_graphs_list, headers=headers)
     except requests.exceptions.RequestException as exception:
         raise SystemExit(exception)
     graph_list = req.json()
+    graph_list_names.clear()
     for graph in graph_list['graphs']:
         graph_list_names.append(graph['name'])
 
@@ -64,23 +67,21 @@ def update_graph():
         req = requests.post(url=pixel_graphs_endpoint, json=payload, headers=headers)
     except requests.exceptions.RequestException as exception:
         raise SystemExit(exception)
-    print(req.status_code)
+    if req.status_code == 200:
+        print("Update Successful!")
 
 
 def delete_graph():
-    global graph_id
     pixel_graphs_delete = f"{endpoint}{username}/graphs/{graph_id}"
     try:
         req = requests.delete(url=pixel_graphs_delete, headers=headers)
     except requests.exceptions.RequestException as exception:
         raise SystemExit(exception)
-    print(req.status_code)
+    if req.status_code == 200:
+        print("Delete Successful!")
 
 
 def create_graph():
-    global graph_choice_name
-    for name in graph_choice_name:
-        print(name)
     new_graph_name = input("What's the name of the new graph? ")
     new_graph_id = input("What's the ID of the new graph? ")
     new_unit = input("What is the unit? ")
@@ -99,18 +100,15 @@ def create_graph():
         req = requests.post(url=pixel_graphs_create, json=payload, headers=headers)
     except requests.exceptions.RequestException as exception:
         raise SystemExit(exception)
-    print(req.status_code)
+    if req.status_code == 200:
+        print("Create Successful!")
 
-def reset_graph_list():
-    global graph_list
-    print(graph_list)
-    graph_list.clear()
-    print(graph_list)
 
 in_loop = True
 
 while in_loop:
     choices = ['Update', 'Create', 'Delete', 'Exit']
+    # TODO: add more options, update, fetch, ect.
     task_input = [
         inquirer.List('task_name',
                       message="What would you like to do? Create/Update/Delete?",
@@ -119,19 +117,17 @@ while in_loop:
     task_choice = inquirer.prompt(questions=task_input)
     task_choice_answer = task_choice.popitem()[1].lower()
     if task_choice_answer == 'update':
-        graph_list = []
         get_graph_names()
         ask_which_graph()
         get_graph_id()
         update_graph()
     elif task_choice_answer == 'create':
-        graph_list = []
+        print("Current Graphs:")
         get_graph_names()
-        ask_which_graph()
-        get_graph_id()
+        for graph in graph_list_names:
+            print(f"{graph}")
         create_graph()
     elif task_choice_answer == 'delete':
-        graph_list = []
         get_graph_names()
         ask_which_graph()
         get_graph_id()
