@@ -23,6 +23,7 @@ graph_id = ""
 
 def get_graph_names():
     global graph_list
+    reset_graph_list()
     pixel_graphs_list = f"{endpoint}{username}/graphs/"
     try:
         req = requests.get(url=pixel_graphs_list, headers=headers)
@@ -31,14 +32,6 @@ def get_graph_names():
     graph_list = req.json()
     for graph in graph_list['graphs']:
         graph_list_names.append(graph['name'])
-
-
-def ask_which_graph():
-    global graph_choice
-    graph_input = [
-        inquirer.List('graph_name', message='Which Graph?', choices=graph_list_names),
-    ]
-    graph_choice = inquirer.prompt(questions=graph_input)
 
 
 def get_graph_id():
@@ -53,36 +46,39 @@ def get_graph_id():
     pixel_graphs_endpoint = f"{endpoint}{username}/graphs/{graph_id}"
 
 
+def ask_which_graph():
+    global graph_choice
+    graph_input = [
+        inquirer.List('graph_name', message='Which Graph?', choices=graph_list_names),
+    ]
+    graph_choice = inquirer.prompt(questions=graph_input)
+
+
 def update_graph():
     hours = input("How many hours today? ")
-    get_graph_names()
-    ask_which_graph()
-    get_graph_id()
     payload = {
         "date": today,
         "quantity": hours,
     }
     try:
-        requests.post(url=pixel_graphs_endpoint, json=payload, headers=headers)
+        req = requests.post(url=pixel_graphs_endpoint, json=payload, headers=headers)
     except requests.exceptions.RequestException as exception:
         raise SystemExit(exception)
+    print(req.status_code)
 
 
 def delete_graph():
     global graph_id
-    get_graph_names()
-    ask_which_graph()
-    get_graph_id()
     pixel_graphs_delete = f"{endpoint}{username}/graphs/{graph_id}"
     try:
-        requests.delete(url=pixel_graphs_delete, headers=headers)
+        req = requests.delete(url=pixel_graphs_delete, headers=headers)
     except requests.exceptions.RequestException as exception:
         raise SystemExit(exception)
+    print(req.status_code)
 
 
 def create_graph():
     global graph_choice_name
-    get_graph_names()
     for name in graph_choice_name:
         print(name)
     new_graph_name = input("What's the name of the new graph? ")
@@ -100,9 +96,45 @@ def create_graph():
     }
     print(pixel_graphs_create)
     try:
-        requests.post(url=pixel_graphs_create, json=payload, headers=headers)
+        req = requests.post(url=pixel_graphs_create, json=payload, headers=headers)
     except requests.exceptions.RequestException as exception:
         raise SystemExit(exception)
+    print(req.status_code)
 
+def reset_graph_list():
+    global graph_list
+    print(graph_list)
+    graph_list.clear()
+    print(graph_list)
 
-delete_graph()
+in_loop = True
+
+while in_loop:
+    choices = ['Update', 'Create', 'Delete', 'Exit']
+    task_input = [
+        inquirer.List('task_name',
+                      message="What would you like to do? Create/Update/Delete?",
+                      choices=choices),
+    ]
+    task_choice = inquirer.prompt(questions=task_input)
+    task_choice_answer = task_choice.popitem()[1].lower()
+    if task_choice_answer == 'update':
+        graph_list = []
+        get_graph_names()
+        ask_which_graph()
+        get_graph_id()
+        update_graph()
+    elif task_choice_answer == 'create':
+        graph_list = []
+        get_graph_names()
+        ask_which_graph()
+        get_graph_id()
+        create_graph()
+    elif task_choice_answer == 'delete':
+        graph_list = []
+        get_graph_names()
+        ask_which_graph()
+        get_graph_id()
+        delete_graph()
+    else:
+        in_loop = False
