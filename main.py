@@ -24,7 +24,7 @@ pixel_graphs_endpoint = ""
 graph_id = ""
 
 
-def get_graph_names(graph=None):
+def get_graph_names():
     global graph_list
     global graph_list_names
     pixel_graphs_list = f"{endpoint}{username}/graphs/"
@@ -41,7 +41,6 @@ def get_graph_names(graph=None):
 def get_graph_id():
     global pixel_graphs_endpoint
     global graph_choice_name
-    global graph_list
     global graph_id
     graph_choice_name = graph_choice['graph_name']
     for graph in graph_list['graphs']:
@@ -68,8 +67,7 @@ def update_graph():
         req = requests.post(url=pixel_graphs_endpoint, json=payload, headers=headers)
     except requests.exceptions.RequestException as exception:
         raise SystemExit(exception)
-    if req.status_code == 200:
-        print("Update Successful!")
+    print_results("Update", req.status_code)
 
 
 def delete_graph():
@@ -78,8 +76,7 @@ def delete_graph():
         req = requests.delete(url=pixel_graphs_delete, headers=headers)
     except requests.exceptions.RequestException as exception:
         raise SystemExit(exception)
-    if req.status_code == 200:
-        print("Delete Successful!")
+    print_results("Delete", req.status_code)
 
 
 def create_graph():
@@ -101,15 +98,21 @@ def create_graph():
         req = requests.post(url=pixel_graphs_create, json=payload, headers=headers)
     except requests.exceptions.RequestException as exception:
         raise SystemExit(exception)
-    if req.status_code == 200:
-        print("Create Successful!")
+    print_results("Create", req.status_code)
+
+
+def print_results(command, code):
+    if code == 200:
+        print(f"{command} successful")
+    else:
+        print(f"{command} failed -> HTTP Response {code}")
 
 
 in_loop = True
 
 while in_loop:
     choices = ['Update', 'Create', 'Delete', 'Exit']
-    # TODO: add more options, update, fetch, ect.
+    # TODO: add more options, update entry, list graphs, ect.
     task_input = [
         inquirer.List('task_name',
                       message="What would you like to do? Create/Update/Delete?",
