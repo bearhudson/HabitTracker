@@ -4,6 +4,7 @@ import os
 import inquirer
 
 # TODO: build whole thing into object like an adult.
+# TODO: write better response handling.
 
 token = os.environ.get('TOKEN')
 username = os.environ.get('USERNAME')
